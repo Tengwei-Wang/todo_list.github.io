@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易待办事项</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">待办事项</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <form id="todoForm" class="flex">
+                <input 
+                    type="text" 
+                    id="todoInput" 
+                    placeholder="添加新的待办事项..." 
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button 
+                    type="submit" 
+                    class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-colors"
+                >
+                    <i class="fa fa-plus"></i>
+                </button>
+            </form>
+        </div>
+        
+        <div id="todoList" class="space-y-2">
+            <!-- 待办事项将通过JavaScript动态添加到这里 -->
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const todoForm = document.getElementById('todoForm');
+        const todoInput = document.getElementById('todoInput');
+        const todoList = document.getElementById('todoList');
+        
+        // 加载本地存储的待办事项
+        function loadTodos() {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            todos.forEach(todo => addTodoToDOM(todo.text, todo.completed));
+        }
+        
+        // 添加待办事项到DOM
+        function addTodoToDOM(text, completed = false) {
+            const todoItem = document.createElement('div');
+            todoItem.className = `bg-white p-4 rounded-lg shadow flex justify-between items-center ${completed ? 'opacity-70' : ''}`;
+            
+            todoItem.innerHTML = `
+                <span class="flex-1 ${completed ? 'line-through text-gray-500' : ''}">${text}</span>
+                <div class="flex space-x-2">
+                    <button class="complete-btn text-green-500 hover:text-green-700" ${completed ? 'disabled' : ''}>
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="delete-btn text-red-500 hover:text-red-700">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            // 完成按钮事件
+            todoItem.querySelector('.complete-btn').addEventListener('click', () => {
+                const span = todoItem.querySelector('span');
+                span.classList.add('line-through', 'text-gray-500');
+                todoItem.classList.add('opacity-70');
+                todoItem.querySelector('.complete-btn').disabled = true;
+                updateLocalStorage();
+            });
+            
+            // 删除按钮事件
+            todoItem.querySelector('.delete-btn').addEventListener('click', () => {
+                todoItem.remove();
+                updateLocalStorage();
+            });
+            
+            todoList.appendChild(todoItem);
+        }
+        
+        // 更新本地存储
+        function updateLocalStorage() {
+            const todos = [];
+            document.querySelectorAll('#todoList > div').forEach(item => {
+                const text = item.querySelector('span').textContent;
+                const completed = item.querySelector('span').classList.contains('line-through');
+                todos.push({ text, completed });
+            });
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+        
+        // 表单提交事件
+        todoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = todoInput.value.trim();
+            
+            if (text) {
+                addTodoToDOM(text);
+                todoInput.value = '';
+                updateLocalStorage();
+            }
+        });
+        
+        // 页面加载时加载待办事项
+        loadTodos();
+    </script>
+</body>
+</html>
